@@ -33,5 +33,5 @@ $classes = array(
     'Larium\\ActiveRecord\\CollectionInterface' => 'Larium/ActiveRecord/CollectionInterface.php',
     'Larium\\ActiveRecord\\Record' => 'Larium/ActiveRecord/Record.php',
 );
-$loader = new ClassMap(__DIR__ . "/src/", $classes);
-$loader->register();
+
+ClassMap::load(__DIR__ . "/src/", $classes)->register();
