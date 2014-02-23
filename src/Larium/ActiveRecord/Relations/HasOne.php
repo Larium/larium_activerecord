@@ -113,21 +113,4 @@ class HasOne extends Relation
     {
         // code...
     }
-
-    public function getPolymorphicTypeValue()
-    {
-        if ($this->parent instanceof Record) {
-
-            return get_class($this->parent);
-        } elseif ($this->parent instanceof CollectionInterface) {
-
-            $classes = array();
-
-            foreach ($this->parent as $class) {
-                $classes[] = get_class($class);
-            }
-
-            return $classes;
-        }
-    }
 }

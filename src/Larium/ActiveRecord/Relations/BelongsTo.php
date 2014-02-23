@@ -62,10 +62,11 @@ class BelongsTo extends Relation
                 $this->getPrimaryKey() => $this->getForeignKeyValue()
             );
 
-            if ($this->options->polymorphic) {
-                $type = $this->options->polymorphic['as'] . '_type';
+            if (true === $this->options->polymorphic) {
+                $type = $this->getRelationAttribute() . '_type';
                 $where = array(
-                    $type => $this->getPolymorphicTypeValue()
+                    $this->getPrimaryKey() => $this->getForeignKeyValue(),
+                    $type => $this->getPolymorphicTypeValue($type)
                 );
             }
 
@@ -111,20 +112,14 @@ class BelongsTo extends Relation
         }
     }
 
-    public function getPolymorphicTypeValue()
+    public function getPolymorphicTypeValue($type)
     {
         if ($this->parent instanceof Record) {
 
-            return get_class($this->parent);
+            return $this->parent->$type;
         } elseif ($this->parent instanceof CollectionInterface) {
 
-            $classes = array();
-
-            foreach ($this->parent as $class) {
-                $classes[] = get_class($class);
-            }
-
-            return $classes;
+            return array_unique(array_filter($this->parent->toArray($type)));
         }
     }
 
