@@ -7,8 +7,8 @@ namespace Larium\ActiveRecord;
 use Larium\ActiveRecord\Record;
 use Larium\ActiveRecord\CollectionInterface;
 
-class Collection extends \IteratorIterator implements 
-    CollectionInterface, 
+class Collection extends \IteratorIterator implements
+    CollectionInterface,
     \Countable
 {
 
@@ -86,8 +86,8 @@ class Collection extends \IteratorIterator implements
     public function count()
     {
         return count($this->results);
-    }    
-    
+    }
+
     public function offsetExists($key)
     {
         if ($key > $this->_current_max_offset()) {
@@ -99,8 +99,8 @@ class Collection extends \IteratorIterator implements
 
     public function offsetGet($key)
     {
-        if ($key > $this->_current_max_offset() 
-            || $key < $this->_current_max_offset() - static::$BATCH_SIZE) 
+        if ($key > $this->_current_max_offset()
+            || $key < $this->_current_max_offset() - static::$BATCH_SIZE)
         {
             $this->current_page = floor($key/static::$BATCH_SIZE);
             $this->hydrate();
@@ -116,13 +116,13 @@ class Collection extends \IteratorIterator implements
             return $this->results[] = $value;
         } else {
             return $this->results[$key] = $value;
-        }       
+        }
     }
 
     public function offsetUnset($key)
     {
         $this->deleted[] = $key;
-        unset($this->results[$key]); 
+        unset($this->results[$key]);
     }
 
     public function add($value)
@@ -151,12 +151,17 @@ class Collection extends \IteratorIterator implements
         return empty($this->results);
     }
 
-    public function map(\Closure $block) 
+    public function map(\Closure $block)
     {
-        return new self(array_map($block, array_keys($this->results), $this->results));
+        return new self(new \ArrayIterator(array_map($block, array_keys($this->results), $this->results)));
     }
 
-    public function each_with_index(\Closure $block) 
+    public function filter(\Closure $block)
+    {
+        return new self(new \ArrayIterator(array_filter($this->results, $block)));
+    }
+
+    public function each_with_index(\Closure $block)
     {
         foreach ($this->results as $key => $value) {
             $block($key, $this->results[$key]);
@@ -182,7 +187,11 @@ class Collection extends \IteratorIterator implements
             $return = array();
 
             foreach($this->results as $k=>$row) {
-                $return[$k] = $row->getAttributes();
+
+                if ($v = $row->getAttributes()) {
+                    $return[$k] = $v;
+                }
+
             }
 
             // Key column name
@@ -214,8 +223,8 @@ class Collection extends \IteratorIterator implements
         $array = array();
 
         $array = array_filter(
-            $this->results, 
-            function($row) use ($search_value, $field_value, $closure){ 
+            $this->results,
+            function($row) use ($search_value, $field_value, $closure){
                 if ($closure) $closure($row);
                 return $search_value == $row->$field_value;
             });
@@ -229,7 +238,7 @@ class Collection extends \IteratorIterator implements
         $array = array_filter($this->results, function($row) use ($search_value, $field_value){
             return $search_value == $row->$field_value;
         });
-        
+
         return reset($array) ?: null;
     }
 
@@ -265,7 +274,7 @@ class Collection extends \IteratorIterator implements
         for ( $i=$offset; $i <= ($this->current_page + 1) * static::$BATCH_SIZE; $i++ ) {
             if (in_array($i, $this->deleted)) continue;
             if ($rows->offsetExists($i)) {
-                $this->results[$i] = ($rows[$i] instanceof Record) 
+                $this->results[$i] = ($rows[$i] instanceof Record)
                     ? $rows[$i]
                     : $record::initWith($rows[$i]);
             }

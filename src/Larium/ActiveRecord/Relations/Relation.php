@@ -30,7 +30,7 @@ abstract class Relation
     protected $relation_class;
 
     /**
-     * @var CollectionInterface
+     * @var Larium\ActiveRecord\CollectionInterface
      */
     protected $result_set;
 
@@ -43,17 +43,29 @@ abstract class Relation
     protected $parent;
 
     /**
-     * @var Query 
+     * @var Query
      */
     protected $query;
 
-    public function __construct($attribute, $parent, $options = array())
-    {
+    /**
+     *
+     * @param string $attribute
+     * @param Record|Collection $parent
+     * @param array $options
+     * @access public
+     *
+     * @return Larium\ActiveRecord\Relation
+     */
+    public function __construct(
+        $attribute,
+        $parent,
+        array $options = array()
+    ) {
         $this->options = new Options($options, get_called_class());
 
         $this->attribute = $attribute;
         $this->parent = $parent;
-        
+
         $this->relation_class = $this->options->record_name;
         $this->foreign_key = $this->options->foreign_key;
     }
@@ -61,14 +73,10 @@ abstract class Relation
     abstract protected function assign($collection_or_record);
 
     abstract public function eagerLoad();
-    
-    protected function camelize($string) {
-        return str_replace(' ', '', ucwords(str_replace('_', ' ', $string)));
-    }
 
     /**
-     * Return the class name of the reference that called this relation 
-     * 
+     * Return the class name of the reference that called this relation
+     *
      * @access public
      * @return string The class name of parent class
      */
@@ -77,7 +85,7 @@ abstract class Relation
         if ($this->parent instanceof Record) {
             $class = get_class($this->parent);
         } elseif ($this->parent instanceof CollectionInterface) {
-            $class = $this->parent->getRecord(); 
+            $class = $this->parent->getRecord();
         }
 
         return $class;
@@ -89,14 +97,14 @@ abstract class Relation
     }
 
     /**
-     * Gets the name of attribute that has been assigned from the inversed 
+     * Gets the name of attribute that has been assigned from the inversed
      * relation.
      */
     protected function getRelationAttribute()
     {
         $class = str_replace(__NAMESPACE__."\\", '', get_called_class());
         return $this->options->getRelationAttribute(
-            $class, 
+            $class,
             $this->options->record_name,
             $this->getParentClass()
         );
@@ -105,5 +113,10 @@ abstract class Relation
     public function getForeignKey()
     {
         return $this->foreign_key;
+    }
+
+    public function getOptions()
+    {
+        return $this->options;
     }
 }

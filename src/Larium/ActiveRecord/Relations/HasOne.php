@@ -24,7 +24,7 @@ class HasOne extends Relation
         $attribute = $this->getRelationAttribute();
 
         foreach ($this->parent as $parent) {
-            
+
             $detect = $collection->detect(
                 $parent->{$this->getPrimaryKey()},
                 $this->getForeignKey()
@@ -64,9 +64,9 @@ class HasOne extends Relation
     public function find()
     {
         if (null == $this->query) {
-            
+
             $relation_class = $this->relation_class;
-            
+
             $this->query = $relation_class::find()
                 ->where(
                     array(
@@ -76,7 +76,7 @@ class HasOne extends Relation
 
             $this->options->setQuery($this->query);
         }
-        
+
         return $this->query;
     }
 
@@ -98,7 +98,12 @@ class HasOne extends Relation
             return $this->parent->{$this->getPrimaryKey()};
         } elseif ($this->parent instanceof CollectionInterface) {
 
-            return array_unique($this->parent->toArray($this->getPrimaryKey())); 
+            return array_unique($this->parent->toArray($this->getPrimaryKey()));
         }
+    }
+
+    public function saveDirty()
+    {
+        // code...
     }
 }

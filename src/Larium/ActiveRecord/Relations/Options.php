@@ -8,11 +8,14 @@ namespace Larium\ActiveRecord\Relations;
  * Options for relations
  * Available options are:
  * - `record_name` : The name of the class of related record.
- * - `foreign_key` : The name of the foreign key that connects the tables. 
- * - `inversed_by` : Required on BelongsTo relation. It is the relation name of 
+ * - `foreign_key` : The name of the foreign key that connects the tables.
+ * - `inversed_by` : Required on BelongsTo relation. It is the relation name of
  *                   HasMany.
  * - `where`       : An array with extra where clause that will append to query.
  * - `order_by`    : Order that will append to query.
+ * - `dependent`   : Depend action when removing related records from HasMany
+ *                   and ManyToMany relations. Available actions are 'nullify'
+ *                   and 'delete'. Default action is 'delete'.
  */
 class Options
 {
@@ -82,9 +85,9 @@ class Options
         } else if ($relation == 'ManyToMany') {
             $options = $record::$ManyToMany;
         }
-        
+
         $attribute= null;
-        
+
         foreach ($options as $rel=>$option) {
             if ($option['record_name'] == $reference) {
                 $attribute = $rel;

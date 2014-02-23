@@ -5,10 +5,10 @@
 namespace Larium\ActiveRecord;
 
 /**
- * Collection 
+ * Collection
  *
  * @package Larium\ActiveRecord
- * @author  Andreas Kollaros <php@andreaskollaros.com> 
+ * @author  Andreas Kollaros <php@andreaskollaros.com>
  * @license MIT {@link http://opensource.org/licenses/mit-license.php}
  */
 interface CollectionInterface extends \ArrayAccess
@@ -28,11 +28,8 @@ interface CollectionInterface extends \ArrayAccess
     public function select($search_value, $field_value);
 
     public function detect($search_value, $field_value);
-    
+
     public function delete($search_value, $field_value);
-    
+
     public function getRecord();
 }
-/**
- *  
- */

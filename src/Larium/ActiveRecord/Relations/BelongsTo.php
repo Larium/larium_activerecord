@@ -26,7 +26,7 @@ class BelongsTo extends Relation
         $attribute = $this->getRelationAttribute();
 
         foreach ($this->parent as $parent) {
-            
+
             $detect = $collection->detect(
                 $parent->{$this->getForeignKey()},
                 $this->getPrimaryKey()
@@ -64,12 +64,12 @@ class BelongsTo extends Relation
                         $this->getPrimaryKey() => $this->getForeignKeyValue()
                     )
                 );
-            
+
             $this->options->setQuery($this->query);
         }
 
         return $this->query;
-        
+
     }
 
     protected function assign($collection_or_record)
@@ -101,7 +101,18 @@ class BelongsTo extends Relation
             return $this->parent->{$this->getForeignKey()};
         } elseif ($this->parent instanceof CollectionInterface) {
 
-            return array_unique($this->parent->toArray($this->getForeignKey())); 
+            return array_unique(array_filter($this->parent->toArray($this->getForeignKey())));
+        }
+    }
+
+    public function saveDirty()
+    {
+    }
+
+    public function destroy()
+    {
+        if ($this->options->dependent == 'destroy') {
+           return $this->fetch()->destroy();
         }
     }
 }

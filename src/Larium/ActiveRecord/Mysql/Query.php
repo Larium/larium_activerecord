@@ -28,25 +28,30 @@ class Query extends MysqlQuery
         } else {
             $this->eager = array_map('trim', explode(',', $relations));
         }
-        return $this; 
+
+        return $this;
     }
 
-    protected function fetch_data($mode)
+    protected function fetch_data($mode, $hydration = null)
     {
         $this->build_sql();
-        
+
         $iterator = $this->adapter->execute($this);
 
-        $collection = new Collection($iterator, $this->object);
+        if ($this->object) {
+            $collection = new Collection($iterator, $this->object);
+            $collection = $this->eager_load($collection);
+        } else {
+            $collection = $iterator;
+        }
 
-        $collection = $this->eager_load($collection);
 
         if ('all' == $mode) {
-        
-            return $collection; 
+
+            return $collection;
         } elseif ('one' == $mode) {
-        
-            return $collection->current();
+
+            return $collection instanceof Collection ? $collection->first() : $collection->current();
         }
     }
 
@@ -58,7 +63,7 @@ class Query extends MysqlQuery
             // include extra queries for eager loading relations
             foreach( $this->eager as $k=>$include ) {
                 if ( !is_numeric($k) ) {
-                    // chain association detected so call _includes method 
+                    // chain association detected so call _includes method
                     // including $k
                     $this->_includes(array($k => $include), $collection, $this->object);
                 } else {
@@ -75,14 +80,13 @@ class Query extends MysqlQuery
         if ( is_array($include) && !is_numeric(key($include)) ) {
             // we have chain associations to include
             foreach($include as $parent=>$v){
-                // include the parent association first. 
-                // return the included collection as $c. $collection already 
+                // include the parent association first.
+                // return the included collection as $c. $collection already
                 // merged association records.
-                
+
                 $c = $this->_includes($parent, $collection, $collection->getRecord());
                 if (!$c->isEmpty()) {
-                    // now if we have multiple includes, include them with parent 
-                    // class classify($k) to $c collection
+                    // now if we have multiple includes, include them with parent
                     if (is_array($v)) {
                         $this->_includes($v, $c, $c->getRecord());
                     // if we have not multiply includes just include it with parent
@@ -97,7 +101,7 @@ class Query extends MysqlQuery
             foreach ($include as $i) {
                 $this->_includes($i, $collection, $object);
             }
-            // here we make the merge of the associations to main $collection 
+            // here we make the merge of the associations to main $collection
             // dependent association type
         } else {
             if ( $relation = $object::getRelationship($collection, $include)
