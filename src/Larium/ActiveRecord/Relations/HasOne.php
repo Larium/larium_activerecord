@@ -67,12 +67,19 @@ class HasOne extends Relation
 
             $relation_class = $this->relation_class;
 
-            $this->query = $relation_class::find()
-                ->where(
-                    array(
-                        $this->getForeignKey() => $this->getPrimaryKeyValue()
-                    )
+            $where = array(
+                $this->getForeignKey() => $this->getPrimaryKeyValue()
+            );
+
+            if ($this->options->polymorphic) {
+                $type = $this->options->polymorphic['as'] . '_type';
+                $where = array(
+                    $this->getForeignKey() => $this->getPrimaryKeyValue(),
+                    $type => $this->options->polymorphic['class']
                 );
+            }
+
+            $this->query = $relation_class::find()->where($where);
 
             $this->options->setQuery($this->query);
         }
@@ -105,5 +112,22 @@ class HasOne extends Relation
     public function saveDirty()
     {
         // code...
+    }
+
+    public function getPolymorphicTypeValue()
+    {
+        if ($this->parent instanceof Record) {
+
+            return get_class($this->parent);
+        } elseif ($this->parent instanceof CollectionInterface) {
+
+            $classes = array();
+
+            foreach ($this->parent as $class) {
+                $classes[] = get_class($class);
+            }
+
+            return $classes;
+        }
     }
 }

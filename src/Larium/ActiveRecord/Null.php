@@ -13,6 +13,11 @@ class Null extends Record
         return new self();
     }
 
+    public function __call($name, $value)
+    {
+        return null;
+    }
+
     public function __toString()
     {
         return '';
