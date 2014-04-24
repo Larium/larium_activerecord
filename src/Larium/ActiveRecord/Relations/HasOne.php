@@ -48,8 +48,13 @@ class HasOne extends Relation
 
     public function setRelated(Record $record)
     {
-        $record->{$this->getForeignKey()} = $this->parent->{$this->getPrimaryKey()};
-        $this->assign($record);
+        if ($this->result_set) {
+            $record->{$this->getForeignKey()} = $this->parent->{$this->getPrimaryKey()};
+            $this->result_set->setAttributes($record->getAttributes());
+        } else {
+            $record->{$this->getForeignKey()} = $this->parent->{$this->getPrimaryKey()};
+            $this->assign($record);
+        }
     }
 
     public function fetch($reload = false)
@@ -111,6 +116,6 @@ class HasOne extends Relation
 
     public function saveDirty()
     {
-        // code...
+        $this->result_set->{$this->getForeignKey()} = $this->parent->{$this->getPrimaryKey()};
     }
 }
