@@ -36,7 +36,7 @@ class Query extends MysqlQuery
     {
         $this->build_sql();
 
-        $iterator = $this->adapter->execute($this);
+        $iterator = $this->adapter->execute($this, 'Load', $hydration);
 
         if ($this->object) {
             $collection = new Collection($iterator, $this->object);
