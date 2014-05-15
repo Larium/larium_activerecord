@@ -68,6 +68,7 @@ abstract class Relation
 
         $this->relation_class = $this->options->record_name;
         $this->foreign_key = $this->options->foreign_key;
+        $this->primary_key = $this->options->primary_key;
     }
 
     abstract protected function assign($collection_or_record);
