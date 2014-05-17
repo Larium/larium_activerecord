@@ -101,6 +101,8 @@ abstract class Record implements \ArrayAccess
 
     private $frozen = false;
 
+    private $event_executor;
+
     protected static $adapter;
 
     /* -( Relationships ) -------------------------------------------------- */
@@ -120,7 +122,7 @@ abstract class Record implements \ArrayAccess
 
     /* -( Model ) ---------------------------------------------------------- */
 
-    public function __construct($attrs=array(), $new_record=true)
+    public function __construct(array $attrs = array(), $new_record = true)
     {
         $this->new_record = $new_record;
 
@@ -426,7 +428,7 @@ abstract class Record implements \ArrayAccess
 
     private function create()
     {
-        return Base::runCallbacks('create', $this, function(){
+        return $this->getEventExecutor()->execute(__FUNCTION__, function(){
 
             $attrs = $this->assign_attributes();
 
@@ -450,7 +452,7 @@ abstract class Record implements \ArrayAccess
 
     private function update()
     {
-        return Base::runCallbacks('update', $this, function(){
+        return $this->getEventExecutor()->execute(__FUNCTION__, function(){
 
             if (!$this->isDirty() || empty($this->to_save)) {
                 return true;
@@ -526,6 +528,17 @@ abstract class Record implements \ArrayAccess
     public function isDirty()
     {
         return !empty($this->to_save) || !empty($this->dirty);
+    }
+
+    /* -( EventExecutor ) -------------------------------------------------- */
+
+    public function getEventExecutor()
+    {
+        if (null === $this->event_executor) {
+            $this->event_executor = new Callback\EventExecutor($this);
+        }
+
+        return $this->event_executor;
     }
 
     /* -( Adapter Setup ) -------------------------------------------------- */

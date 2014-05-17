@@ -14,11 +14,16 @@
         {
             "url": "git@github.com:Larium/larium_database.git",
             "type": "git"
+        },
+        {
+            "url": "git@github.com:Larium/larium_executor.git",
+            "type": "git"
         }
     ],
     "require": {
         "php": ">=5.4",
-        "larium/database" : "*"
+        "larium/database" : "*",
+        "larium/executor" : "*"
     },
     "minimum-stability": "dev",
     "autoload": {
