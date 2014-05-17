@@ -428,7 +428,7 @@ abstract class Record implements \ArrayAccess
 
     private function create()
     {
-        return $this->getEventExecutor()->execute(__FUNCTION__, function(){
+        return $this->getEventExecutor()->execute('create', function(){
 
             $attrs = $this->assign_attributes();
 
@@ -452,7 +452,7 @@ abstract class Record implements \ArrayAccess
 
     private function update()
     {
-        return $this->getEventExecutor()->execute(__FUNCTION__, function(){
+        return $this->getEventExecutor()->execute('save', function(){
 
             if (!$this->isDirty() || empty($this->to_save)) {
                 return true;

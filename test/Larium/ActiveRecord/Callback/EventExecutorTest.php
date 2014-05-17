@@ -28,6 +28,10 @@ class EventExecutorTest extends \PHPUnit_Framework_TestCase
 
         $author->save();
 
-        $this->assertEquals('kollaros', $author->lastname);
+        $this->assertEquals('pre_kollaros', $author->lastname);
+
+        $author->save();
+
+        $this->assertEquals('PRE_pre_kollaros', $author->lastname);
     }
 }

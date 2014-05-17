@@ -16,6 +16,8 @@ class Author extends Record
 
     public $after_create = array('lowercase');
 
+    public $before_save = array('prepend_name');
+
     public function uppercase()
     {
         $this->lastname = strtoupper($this->lastname);
@@ -25,6 +27,11 @@ class Author extends Record
     {
         $this->lastname = strtolower($this->lastname);
 
+    }
+
+    public function prepend_name()
+    {
+        $this->lastname = "PRE_" . $this->lastname;
     }
 
 }
