@@ -2,7 +2,7 @@
 
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
-namespace Larium\Database\Mysql;
+namespace Larium\ActiveRecord\Mock;
 
 use Larium\Database\ResultIteratorInterface;
 
@@ -44,21 +44,11 @@ class ResultIterator implements ResultIteratorInterface, \ArrayAccess
         $this->result_set = $result_set;
         $this->fetch_style = $fetch_style ?: $this->fetch_style;
         $this->object = $object ?: '\\stdClass';
-
-        if (Adapter::FETCH_ASSOC === $fetch_style) {
-            $this->arg = \MYSQLI_ASSOC;
-        } else {
-            $this->arg = $this->object;
-        }
     }
 
     public function current()
     {
-        $this->result_set->data_seek($this->index);
-
-        $method = $this->fetch_methods[$this->fetch_style];
-
-        return $this->result_set->$method($this->arg);
+        return $this->result_set[$this->index];
     }
 
     public function key()
@@ -83,21 +73,17 @@ class ResultIterator implements ResultIteratorInterface, \ArrayAccess
 
     public function count()
     {
-        return $this->result_set->num_rows;
+        return count($this->result_set);
     }
 
     public function offsetExists($key)
     {
-        return $key < $this->result_set->num_rows;
+        return $key < $this->count();
     }
 
     public function offsetGet($key)
     {
-        $this->result_set->data_seek($key);
-
-        $method = $this->fetch_methods[$this->fetch_style];
-
-        return $this->result_set->$method($this->arg);
+        return $this->result_set[$key];
     }
 
     public function offsetSet($key, $value)
@@ -124,10 +110,5 @@ class ResultIterator implements ResultIteratorInterface, \ArrayAccess
         }
 
         return $result;
-    }
-
-    public function __destruct()
-    {
-        $this->result_set->free();
     }
 }
