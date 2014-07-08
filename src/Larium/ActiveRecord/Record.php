@@ -164,9 +164,12 @@ abstract class Record implements \ArrayAccess
             return method_exists($this, $name)
                 ? $this->$name()
                 : $this->attributes[$name];
-        } else {
-            return null;
+        } elseif ($relation = $this->getRelation($name)) {
+
+            return $relation;
         }
+
+        throw new \InvalidArgumentException(sprintf('%s::%s property does not exists', get_class($this), $name));
     }
 
     protected function getAttribute($attr)
@@ -774,13 +777,13 @@ abstract class Record implements \ArrayAccess
         ) {
             return $relation->fetch();
         } else {
-            return $relation;
+            return $relation->all();
         }
     }
 
     protected function call_mutator($name, $arguments)
     {
-        $attribute = Inflect::underscore(str_replace('set','',$name));
+        $attribute = Inflect::underscore(str_replace('set', null, $name));
 
         $value = current($arguments);
 

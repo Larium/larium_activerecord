@@ -2,11 +2,19 @@
 
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
-class Book
+use Larium\ActiveRecord\Record;
+
+class Book extends Record
 {
-    public $id;
+    public static $columns = array('id', 'title', 'author_id');
 
-    public $title;
+    public static $table = 'books';
 
-    public $author_id;
+    public static $BelongsTo = array(
+        'author' => array(
+            'record_name' => 'Author',
+            'foreign_key' => 'author_id',
+            'inversed_by' => 'books'
+        )
+    );
 }

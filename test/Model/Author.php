@@ -10,7 +10,12 @@ class Author extends Record
 
     public static $table = 'authors';
 
-    public $books;
+    public static $HasMany = array(
+        'books' => array(
+            'record_name' => 'Book',
+            'foreign_key' => 'author_id'
+        )
+    );
 
     public $before_create = array('uppercase');
 
