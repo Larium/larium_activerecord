@@ -771,14 +771,21 @@ abstract class Record implements \ArrayAccess
     protected function call_accessor($name, $arguments)
     {
         $attribute = Inflect::underscore(str_replace('get','',$name));
-        $relation = $this->getRelation($attribute);
-        if (   $relation instanceof BelongsTo
-            || $relation instanceof HasOne
-        ) {
-            return $relation->fetch();
-        } else {
-            return $relation->all();
+
+        if (array_key_exists($attribute, $this->attributes)) {
+
+            return $this->$attribute;
+        } elseif ($relation = $this->getRelation($attribute)) {
+            if (   $relation instanceof BelongsTo
+                || $relation instanceof HasOne
+            ) {
+                return $relation->fetch();
+            } else {
+                return $relation->all();
+            }
         }
+
+        throw new \InvalidArgumentException(sprintf('Undefined method %s::%s()', get_class($this), $name));
     }
 
     protected function call_mutator($name, $arguments)
