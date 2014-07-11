@@ -492,7 +492,7 @@ abstract class Record implements \ArrayAccess
                         }
                     }
                 } else {
-                    if ($rel->fetch()->isDirty()){
+                    if ($rel->fetch() && $rel->fetch()->isDirty()){
                         $rel->fetch()->save();
                     }
                 }
