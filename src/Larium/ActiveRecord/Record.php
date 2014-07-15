@@ -512,7 +512,10 @@ abstract class Record implements \ArrayAccess
             }
         }
 
-        if (in_array('created_at', static::$columns) && $this->new_record) {
+        if (   in_array('created_at', static::$columns)
+            && $this->new_record
+            && !isset($this->attributes['created_at'])
+        ) {
             $attr['created_at'] = date('Y-m-d H:i:s', time());
         }
 
