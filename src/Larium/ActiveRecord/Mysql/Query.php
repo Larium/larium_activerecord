@@ -84,7 +84,12 @@ class Query extends MysqlQuery
                 // return the included collection as $c. $collection already
                 // merged association records.
 
-                $c = $this->_includes($parent, $collection, $collection->getRecord());
+                if (is_numeric($parent)) {
+                    $c = $this->_includes($v, $collection, $collection->getRecord());
+                } else {
+                    $c = $this->_includes($parent, $collection, $collection->getRecord());
+                }
+
                 if (!$c->isEmpty()) {
                     // now if we have multiple includes, include them with parent
                     if (is_array($v)) {
