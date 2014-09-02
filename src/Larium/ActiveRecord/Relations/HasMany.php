@@ -6,6 +6,7 @@ namespace Larium\ActiveRecord\Relations;
 
 use Larium\ActiveRecord\Record;
 use Larium\ActiveRecord\CollectionInterface;
+use Larium\ActiveRecord\Inflect;
 
 /**
  * OneToMany relation class
@@ -127,7 +128,9 @@ class HasMany extends Collection
     {
         $relation_class = $this->relation_class;
 
-        $inversed_mutator = "set" . $this->getParentClass();
+        $rel_attr = $this->options->getRelationAttribute('HasMany', $relation_class, $this->getParentClass());
+
+        $inversed_mutator = "set" . Inflect::classify($rel_attr);
         $record->$inversed_mutator($this->parent);
 
         if (!$this->parent->isNewRecord()) {
