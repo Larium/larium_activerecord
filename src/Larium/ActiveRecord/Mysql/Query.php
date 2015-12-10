@@ -32,30 +32,28 @@ class Query extends MysqlQuery
         return $this;
     }
 
-    protected function fetch_data($mode, $hydration = null)
+    protected function fetchData($mode, $hydration = null)
     {
-        $this->build_sql();
+        $this->buildSql();
 
         $iterator = $this->adapter->execute($this, 'Load', $hydration);
 
         if ($this->object) {
             $collection = new Collection($iterator, $this->object);
-            $collection = $this->eager_load($collection);
+            $collection = $this->eagerLoad($collection);
         } else {
             $collection = $iterator;
         }
 
 
         if ('all' == $mode) {
-
             return $collection;
         } elseif ('one' == $mode) {
-
             return $collection instanceof Collection ? $collection->first() : $collection->current();
         }
     }
 
-    protected function eager_load($collection)
+    protected function eagerLoad($collection)
     {
         // eager loading
         if ( !$collection->isEmpty() && !empty($this->eager) ) {
