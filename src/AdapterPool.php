@@ -4,6 +4,7 @@
 
 namespace Larium\ActiveRecord;
 
+use Larium\ActiveRecord\Mysql\Adapter;
 use Larium\Database\AdapterInterface;
 
 class AdapterPool
@@ -32,7 +33,7 @@ class AdapterPool
      * @param string $record
      * @static
      * @access public
-     * @return void
+     * @return Adapter
      */
     public static function get($record='Larium\\ActiveRecord\\Record')
     {

@@ -4,19 +4,28 @@
 
 namespace Larium\ActiveRecord\Mysql;
 
-use Larium\Database\Mysql\Query as MysqlQuery;
+use Larium\ActiveRecord\Record;
+use Larium\ActiveRecord\Relations\Relation;
+use Larium\Database\Mysql\Query as DatabaseMysqlQuery;
 use Larium\ActiveRecord\Collection;
 use Larium\ActiveRecord\CollectionInterface;
 
-class Query extends MysqlQuery
+/**
+ * Class Query
+ * @package Larium\ActiveRecord\Mysql
+ *
+ */
+
+class Query extends DatabaseMysqlQuery
 {
     protected $eager = array();
 
-    public function __construct($object=null, $adapter=null)
+    public function __construct(string $object = null, Adapter $adapter = null)
     {
         parent::__construct($object, $adapter);
 
         if (null !== $object) {
+            /** @var Record $object */
             $this->from($object::$table);
         }
     }
@@ -32,28 +41,48 @@ class Query extends MysqlQuery
         return $this;
     }
 
-    protected function fetchData($mode, $hydration = null)
+    /**
+     * @param null $hydration
+     * @return Collection
+     */
+    public function fetchAll($hydration = null)
     {
-        $this->buildSql();
+        return $this->fetch_data("all", $hydration);
+    }
+
+    /**
+     * @param string $mode
+     * @param null $hydration
+     * @return \Iterator|Collection|Record|null
+     */
+    protected function fetch_data($mode, $hydration = null)
+    {
+        $this->build_sql();
 
         $iterator = $this->adapter->execute($this, 'Load', $hydration);
 
         if ($this->object) {
             $collection = new Collection($iterator, $this->object);
-            $collection = $this->eagerLoad($collection);
+            $collection = $this->eager_load($collection);
         } else {
             $collection = $iterator;
         }
 
-
         if ('all' == $mode) {
+
             return $collection;
-        } elseif ('one' == $mode) {
-            return $collection instanceof Collection ? $collection->first() : $collection->current();
         }
+
+        return $collection instanceof Collection
+            ? $collection->first()
+            : $collection->current();
     }
 
-    protected function eagerLoad($collection)
+    /**
+     * @param Collection $collection
+     * @return Collection
+     */
+    protected function eager_load(Collection $collection)
     {
         // eager loading
         if ( !$collection->isEmpty() && !empty($this->eager) ) {
@@ -73,6 +102,12 @@ class Query extends MysqlQuery
         return $collection;
     }
 
+    /**
+     * @param array|int $include
+     * @param CollectionInterface $collection
+     * @param string $object
+     * @return Collection|null
+     */
     private function _includes($include, CollectionInterface $collection, $object)
     {
         if ( is_array($include) && !is_numeric(key($include)) ) {
@@ -107,11 +142,13 @@ class Query extends MysqlQuery
             // here we make the merge of the associations to main $collection
             // dependent association type
         } else {
-            if ( $relation = $object::getRelationship($collection, $include)
-            ) {
+            /** @var Relation $relation */
+            /** @var Record $object */
+            if ($relation = $object::getRelationship($collection, $include)) {
                 return $relation->eagerLoad();
             }
         }
-    }
 
+        return null;
+    }
 }

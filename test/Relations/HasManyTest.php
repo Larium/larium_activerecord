@@ -5,14 +5,17 @@
 namespace Larium\ActiveRecord\Relations;
 
 use Larium\ActiveRecord\AdapterFactory;
+use Larium\ActiveRecord\Model\Author;
 use Larium\ActiveRecord\Record;
 use Larium\ActiveRecord\Collection;
+use Larium\ActiveRecord\Config;
+use PHPUnit\Framework\TestCase;
 
-class HasManyTest extends \PHPUnit_Framework_TestCase
+class HasManyTest extends TestCase
 {
     public function setUp()
     {
-        $config = (new \Config())->getDatabase();
+        $config = (new Config())->getDatabase();
 
         $adapter = AdapterFactory::create($config);
 
@@ -21,7 +24,7 @@ class HasManyTest extends \PHPUnit_Framework_TestCase
 
     public function testHasManyRelationCalls()
     {
-        $a = \Author::find(1)->fetch();
+        $a = Author::find(1)->fetch();
 
         $books = $a->books;
 

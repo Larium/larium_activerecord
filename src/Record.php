@@ -1,9 +1,9 @@
 <?php
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
-
 namespace Larium\ActiveRecord;
 
+use Larium\ActiveRecord\Mysql\Adapter;
+use Larium\ActiveRecord\Mysql\Query;
 use Larium\ActiveRecord\Relations\BelongsTo;
 use Larium\ActiveRecord\Relations\HasOne;
 use Larium\ActiveRecord\Callback\Base;
@@ -12,13 +12,15 @@ use Larium\Database\AdapterInterface;
 /**
  * Record
  *
- * Accesing Relations:
+ * Accessing Relations:
  *  - $record->relation_name # Relations\Relation instance
  *  - $record->getRelationName() # Record or Collection instance
  *
  * @abstract
  * @author  Andreas Kollaros <andreaskollaros@ymail.com>
  * @license MIT {@link http://opensource.org/licenses/mit-license.php}
+ *
+ * @property mixed $id
  */
 abstract class Record implements \ArrayAccess
 {
@@ -103,6 +105,9 @@ abstract class Record implements \ArrayAccess
 
     private $event_executor;
 
+    /**
+     * @var AdapterInterface
+     */
     protected static $adapter;
 
     /* -( Relationships ) -------------------------------------------------- */
@@ -181,10 +186,13 @@ abstract class Record implements \ArrayAccess
 
     private $__de_hydrated = false;
 
+    /**
+     * @return array
+     */
     public function getAttributes()
     {
         if ($this->__de_hydrated == true) {
-            return false;
+            return [];
         }
 
         $attrs = method_exists($this, 'toArray')
@@ -231,9 +239,17 @@ abstract class Record implements \ArrayAccess
         return $attr;
     }
 
-    public function setAttributes(array $attrs, $protected=true, $load=false)
+    /**
+     * @param array $attrs
+     * @param bool $protected
+     * @param bool $load
+     * @return void
+     */
+    public function setAttributes(array $attrs, $protected = true, $load = false)
     {
-        if ($this->frozen) return false;
+        if ($this->frozen) {
+            return;
+        }
 
         if (true == $protected) {
 
@@ -246,7 +262,6 @@ abstract class Record implements \ArrayAccess
                 $attrs,
                 array_flip($protected_attributes)
             );
-
         }
 
         if ($this->isNewRecord()) {
@@ -410,11 +425,17 @@ abstract class Record implements \ArrayAccess
         return $this->frozen;
     }
 
+    /**
+     * @return bool
+     */
     public function save()
     {
         return $this->create_or_update();
     }
 
+    /**
+     * @return bool
+     */
     protected function create_or_update()
     {
         $result = $this->new_record
@@ -491,7 +512,7 @@ abstract class Record implements \ArrayAccess
                             $item->save();
                         }
                     }
-                } else {
+                } elseif ($rel instanceof Record) {
                     if ($rel->fetch() && $rel->fetch()->isDirty()){
                         $rel->fetch()->save();
                     }
@@ -554,6 +575,9 @@ abstract class Record implements \ArrayAccess
         AdapterPool::add(get_called_class(), $adapter);
     }
 
+    /**
+     * @return Adapter
+     */
     public static function getAdapter()
     {
         return AdapterPool::get(get_called_class());
@@ -586,6 +610,10 @@ abstract class Record implements \ArrayAccess
 
     /* -( Finder ) --------------------------------------------------------- */
 
+    /**
+     * @param string null $id
+     * @return Query
+     */
     public static function find($id = null)
     {
         if (null !== $id) {
@@ -593,6 +621,7 @@ abstract class Record implements \ArrayAccess
                 ->createQuery(get_called_class())
                 ->where(array('id' => $id));
         }
+
         return static::getAdapter()->createQuery(get_called_class());
     }
 

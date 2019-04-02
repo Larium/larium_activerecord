@@ -1,5 +1,7 @@
 <?php
 
+namespace Larium\ActiveRecord;
+
 class Config
 {
     protected $database = array();

@@ -21,14 +21,22 @@
         }
     ],
     "require": {
-        "php": ">=5.4",
-        "larium/database" : "*",
-        "larium/executor" : "*"
+        "php": ">=7.2",
+        "larium/database" : "~1.0.0",
+        "larium/executor" : "~1.0.0"
     },
-    "minimum-stability": "dev",
+    "require-dev": {
+        "phpunit/phpunit": "~7.3.0"
+    },
+    "minimum-stability": "stable",
     "autoload": {
-        "psr-0": {
-            "Larium\\": "src/"
+        "psr-4": {
+            "Larium\\ActiveRecord\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Larium\\ActiveRecord\\": "test/"
         }
     }
 }

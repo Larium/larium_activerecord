@@ -42,7 +42,7 @@ class Collection extends \IteratorIterator implements
     protected $results = array();
 
 
-    public function __construct(\ArrayAccess $iterator, $record=null)
+    public function __construct(\Iterator $iterator, $record=null)
     {
         parent::__construct($iterator);
         $this->record = $record;
@@ -218,23 +218,29 @@ class Collection extends \IteratorIterator implements
         return json_encode($this->toArray($keyColumn, $valueColumn));
     }
 
-    public function select($search_value, $field_value, $closure = null)
+    public function select($search_value, $field_value, \Closure $closure = null)
     {
-        $array = array();
 
         $array = array_filter(
             $this->results,
             function($row) use ($search_value, $field_value, $closure){
-                if ($closure) $closure($row);
+                if ($closure) {
+                    $closure($row);
+                }
+
                 return $search_value == $row->$field_value;
             });
 
         return new static(new \ArrayIterator(array_values($array)), $this->record);
     }
 
+    /**
+     * @param $search_value
+     * @param $field_value
+     * @return Record|null
+     */
     public function detect($search_value, $field_value)
     {
-        $array = array(null);
         $array = array_filter($this->results, function($row) use ($search_value, $field_value){
             return $search_value == $row->$field_value;
         });

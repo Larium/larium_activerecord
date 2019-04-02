@@ -81,7 +81,7 @@ class Adapter implements AdapterInterface
 
     /**
      * Returns the current connection between PHP and MySQL database.
-     *
+     * @throws \Exception
      * @return \stdClass
      */
     public function getConnection()

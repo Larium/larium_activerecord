@@ -2,6 +2,8 @@
 
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
+namespace Larium\ActiveRecord\Model;
+
 use Larium\ActiveRecord\Record;
 
 class Author extends Record
@@ -12,7 +14,7 @@ class Author extends Record
 
     public static $HasMany = array(
         'books' => array(
-            'record_name' => 'Book',
+            'record_name' => Book::class,
             'foreign_key' => 'author_id'
         )
     );

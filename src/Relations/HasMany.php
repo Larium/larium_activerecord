@@ -246,8 +246,9 @@ class HasMany extends Collection
                 $old = $this->all()->detect($id, 'id');
                 $new = $collection->detect($id, 'id');
                 if ($old && $new) {
-                    $old->setAttributes($new->getAttributes());
-                    if ($old->isDirty()) $old->save();
+                    //$old->setAttributes($new->getAttributes());
+                    //if ($old->isDirty()) $old->save();
+                    $new->save();
                 }
             }
         } else {

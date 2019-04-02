@@ -4,23 +4,24 @@
 
 namespace Larium\ActiveRecord\Mysql;
 
-use Larium\Database\AdapterInterface;
-use Larium\Database\Mysql\Adapter as MysqlAdapter;
+use Larium\Database\Mysql\Adapter as DatabaseMysqlAdapter;
 use Larium\ActiveRecord\Collection;
 
-class Adapter extends MysqlAdapter
+class Adapter extends DatabaseMysqlAdapter
 {
     /**
      * {@inheritdoc}
      */
     public function __construct(array $config) 
     {
-        $config['fetch'] = MysqlAdapter::FETCH_ASSOC;
+        $config['fetch'] = DatabaseMysqlAdapter::FETCH_ASSOC;
         parent::__construct($config);
     }
     
     /**
-     * {@inheritdoc}
+     * {@inheritdoc
+     *
+     * @return Query
      */
     public function createQuery($object = null)
     {

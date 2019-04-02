@@ -36,7 +36,7 @@ class BelongsTo extends Relation
                 $parent->getRelation($this->attribute)->assign($detect);
                 $detect->getRelation($attribute)->assign($parent);
             } else {
-                $parent->getRelation($this->attribute)->assign(new \Larium\ActiveRecord\Null());
+                $parent->getRelation($this->attribute)->assign(new \Larium\ActiveRecord\NullObject());
             }
         }
 
@@ -57,9 +57,13 @@ class BelongsTo extends Relation
         if (null == $this->query) {
 
             $relation_class = $this->relation_class;
+            $foreignKeyValue = $this->getForeignKeyValue();
+            if (is_array($foreignKeyValue) && empty($foreignKeyValue)) {
+                $foreignKeyValue = null;
+            }
 
             $where = array(
-                $this->getPrimaryKey() => $this->getForeignKeyValue()
+                $this->getPrimaryKey() => $foreignKeyValue,
             );
 
             if (true === $this->options->polymorphic) {

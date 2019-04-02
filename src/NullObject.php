@@ -4,7 +4,7 @@
 
 namespace Larium\ActiveRecord;
 
-class Null extends Record
+class NullObject extends Record
 {
     public static $columns=array(null);
 

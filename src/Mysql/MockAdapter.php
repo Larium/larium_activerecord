@@ -91,7 +91,8 @@ class Adapter implements AdapterInterface
     /**
      * Returns the current connection between PHP and MySQL database.
      *
-     * @return \mysli
+     * @throws \Exception
+     * @return \mysqli
      */
     public function getConnection()
     {
@@ -123,56 +124,12 @@ class Adapter implements AdapterInterface
 
     /**
      * {@inheritdoc}
-     *
+     * @throws \Exception
      * @return int|ResultIterator
      */
     public function execute(QueryInterface $query, $action='Load', $hydration = null)
     {
-
-        if ($this->logger) {
-            $this->getLogger()->logQuery(
-                $this->real_query,
-                $query->getObject(),
-                (microtime(true) - $start),
-                $action
-            );
-        }
-
-        $this->query_array[] = $this->real_query;
-
-        if ( 0 !== $stmt->errno ) {
-            throw new \Exception($stmt->error);
-        }
-
-        switch ($action) {
-            case 'Create':
-                //INSERT statement
-
-                return $this->getInsertId();
-                break;
-            case 'Load':
-                // SELECT statement
-
-                if (Query::HYDRATE_OBJ == $hydration) {
-                    $this->fetch_style = self::FETCH_OBJ;
-                }
-
-                $iterator = new ResultIterator(
-                    $this->results,
-                    $hydration ?: $this->fetch_style,
-                    $query->getObject()
-                );
-
-                return $iterator;
-                break;
-            default:
-                // UPDATE, DELETE statement
-
-                return 1;
-                break;
-        }
-
-        //return $stmt;
+        return 0;
     }
 
     /**
@@ -201,7 +158,7 @@ class Adapter implements AdapterInterface
             return;
         }
 
-        $value =addslashes(($value);
+        $value = addslashes($value);
         $value = is_numeric($value) ? $value : $this->quote($value);
     }
 

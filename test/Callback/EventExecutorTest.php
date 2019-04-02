@@ -5,15 +5,18 @@
 namespace Larium\ActiveRecord\Callback;
 
 use Larium\ActiveRecord\AdapterFactory;
+use Larium\ActiveRecord\Model\Author;
 use Larium\ActiveRecord\Record;
+use Larium\ActiveRecord\Config;
+use PHPUnit\Framework\TestCase;
 
-class EventExecutorTest extends \PHPUnit_Framework_TestCase
+class EventExecutorTest extends TestCase
 {
     protected $adapter;
 
     public function setUp()
     {
-        $config = (new \Config())->getDatabase();
+        $config = (new Config())->getDatabase();
 
         $this->adapter = AdapterFactory::create($config);
 
@@ -22,7 +25,7 @@ class EventExecutorTest extends \PHPUnit_Framework_TestCase
 
     public function testEventCallackTrigger()
     {
-        $author = new \Author();
+        $author = new Author();
 
         $author->lastname = 'Kollaros';
 

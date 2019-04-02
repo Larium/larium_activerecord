@@ -34,7 +34,7 @@ class HasOne extends Relation
                 $parent->getRelation($this->attribute)->assign($detect);
                 $detect->getRelation($attribute)->assign($parent);
             } else {
-                $parent->getRelation($this->attribute)->assign(new \Larium\ActiveRecord\Null());
+                $parent->getRelation($this->attribute)->assign(new \Larium\ActiveRecord\NullObject());
             }
         }
 
@@ -117,5 +117,12 @@ class HasOne extends Relation
     public function saveDirty()
     {
         $this->result_set->{$this->getForeignKey()} = $this->parent->{$this->getPrimaryKey()};
+    }
+
+    public function destroy()
+    {
+        if ($this->options->dependent == 'destroy') {
+           return $this->fetch()->destroy();
+        }
     }
 }
