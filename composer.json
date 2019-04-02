@@ -10,16 +10,6 @@
             "email": "andreaskollaros@ymail.com"
         }
     ],
-    "repositories": [
-        {
-            "url": "git@github.com:Larium/larium_database.git",
-            "type": "git"
-        },
-        {
-            "url": "git@github.com:Larium/larium_executor.git",
-            "type": "git"
-        }
-    ],
     "require": {
         "php": ">=7.2",
         "larium/database" : "~1.0.0",
