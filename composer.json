@@ -16,7 +16,7 @@
         "larium/executor" : "~1.0.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "~7.3.0"
+        "phpunit/phpunit": "~7.4.0"
     },
     "minimum-stability": "stable",
     "autoload": {
