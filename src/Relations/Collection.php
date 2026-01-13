@@ -4,14 +4,15 @@
 
 namespace Larium\ActiveRecord\Relations;
 
+use Larium\ActiveRecord\CollectionInterface;
 use Larium\ActiveRecord\Record;
+use Traversable;
 
-abstract class Collection extends Relation implements 
-    RelationCollectionInterface, 
-    \IteratorAggregate, 
+abstract class Collection extends Relation implements
+    RelationCollectionInterface,
     \ArrayAccess
 {
-    
+
     public function first()
     {
         return $this->all()->first();
@@ -26,32 +27,32 @@ abstract class Collection extends Relation implements
     {
         return $this->getIterator()->isEmpty();
     }
-    
+
     // IteratorAggregate
-    
-    public function getIterator()
+
+    public function getIterator(): CollectionInterface
     {
         return $this->all();
     }
 
     // ArrayAccess
 
-    public function offsetExists($offset) 
+    public function offsetExists($offset): bool
     {
         return $this->all()->offsetExists($offset);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
-        return $this->all()->offsetGet($offset); 
+        return $this->all()->offsetGet($offset);
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->add($value, $offset);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $object = $this[$offset];
         $this->delete($object, $offset);

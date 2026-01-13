@@ -4,9 +4,9 @@
 
 namespace Larium\ActiveRecord\Relations;
 
-use Larium\ActiveRecord\Record;
 use Larium\ActiveRecord\CollectionInterface;
 use Larium\ActiveRecord\Inflect;
+use Larium\ActiveRecord\Record;
 
 /**
  * OneToMany relation class
@@ -58,7 +58,7 @@ class HasMany extends Collection
      * @param boolean $reload
      * @access public
      *
-     * @return Larium\ActiveRecord\CollectionInterface
+     * @return \Larium\ActiveRecord\CollectionInterface
      */
     public function all($reload = false)
     {
@@ -71,7 +71,7 @@ class HasMany extends Collection
 
                 $attribute = $this->getRelationAttribute();
 
-                foreach($collection as $item) {
+                foreach ($collection as $item) {
                     $item->getRelation($attribute)->assign($this->parent);
                 }
             }
@@ -96,7 +96,8 @@ class HasMany extends Collection
                 $relation_class = $this->relation_class;
                 $through = $this->options->through;
 
-                $this->query->select(array(
+                $this->query->select(
+                    array(
                     $relation_class::$table . ".*",
                     $through::$table . "." . $this->getForeignKey())
                 )->innerJoin(
@@ -176,7 +177,7 @@ class HasMany extends Collection
 
             $this->result_set = $collection_or_record;
 
-        } else if ($collection_or_record instanceof Record) {
+        } elseif ($collection_or_record instanceof Record) {
 
             if (null === $this->result_set) {
                 $this->result_set = Record::getAdapter()
@@ -214,7 +215,7 @@ class HasMany extends Collection
             $new_ids = $this->get_related_ids($collection);
 
             $to_delete = array_diff($old_ids, $new_ids);
-            $to_delete_objects = $this->result_set->filter(function($v) use ($to_delete, $relation_class){
+            $to_delete_objects = $this->result_set->filter(function ($v) use ($to_delete, $relation_class) {
                 return in_array($v->{$relation_class::$primary_key}, $to_delete);
             });
             foreach ($to_delete_objects as $key=>$obj) {
@@ -224,16 +225,16 @@ class HasMany extends Collection
 
             // resolve new and to add items
             $to_add = array_diff($new_ids, $old_ids);
-            $null_keys = array_filter($to_add, function($var){
+            $null_keys = array_filter($to_add, function ($var) {
                 return $var === null || empty($var);
             });
 
             if (!empty($null_keys)) {
-                foreach($null_keys as $key=>$null) {
+                foreach ($null_keys as $key=>$null) {
                     $this->add($collection[$key]);
                 }
             }
-            $to_add_objects = $collection->filter(function($v) use ($to_add, $relation_class){
+            $to_add_objects = $collection->filter(function ($v) use ($to_add, $relation_class) {
                 return in_array($v->{$relation_class::$primary_key}, $to_add);
             });
             foreach ($to_add_objects as $key=>$obj) {
@@ -268,7 +269,7 @@ class HasMany extends Collection
 
     public function getPrimaryKey()
     {
-        if (null == $this->primary_key){
+        if (null == $this->primary_key) {
             $record = $this->getParentClass();
             $this->primary_key = $record::$primary_key;
         }
@@ -288,7 +289,7 @@ class HasMany extends Collection
         }
     }
 
-    public function count()
+    public function count(): int
     {
         return $this->all()->count();
     }

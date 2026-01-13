@@ -5,6 +5,7 @@
 namespace Larium\ActiveRecord\Relations;
 
 use Larium\ActiveRecord\Record;
+use Larium\Database\QueryInterface;
 
 /**
  * ManyToMany relation class
@@ -89,6 +90,9 @@ class ManyToMany extends HasMany
         return $this->result_set;
     }
 
+    /**
+     * @return QueryInterface
+     */
     public function find()
     {
         if (null == $this->query) {

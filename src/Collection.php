@@ -50,17 +50,17 @@ class Collection extends \IteratorIterator implements
 
     }
 
-    public function current()
+    public function current(): mixed
     {
         return current($this->results);
     }
 
-    public function key()
+    public function key(): mixed
     {
         return key($this->results);
     }
 
-    public function next()
+    public function next(): void
     {
         if ($this->key() >= ($this->current_page + 1) * static::$BATCH_SIZE ) {
             $this->current_page++;
@@ -70,7 +70,7 @@ class Collection extends \IteratorIterator implements
 
     }
 
-    public function rewind()
+    public function rewind(): void
     {
         if ($this->current_page !== 0 )
             $this->hydrate();
@@ -78,17 +78,17 @@ class Collection extends \IteratorIterator implements
         reset($this->results);
     }
 
-    public function valid()
+    public function valid(): bool
     {
         return (current($this->results) !== false);
     }
 
-    public function count()
+    public function count(): int
     {
         return count($this->results);
     }
 
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         if ($key > $this->_current_max_offset()) {
             $this->current_page = floor($key/static::$BATCH_SIZE);
@@ -97,7 +97,7 @@ class Collection extends \IteratorIterator implements
         return isset($this->results[$key]);
     }
 
-    public function offsetGet($key)
+    public function offsetGet($key): mixed
     {
         if ($key > $this->_current_max_offset()
             || $key < $this->_current_max_offset() - static::$BATCH_SIZE)
@@ -108,18 +108,20 @@ class Collection extends \IteratorIterator implements
         return $this->results[$key];
     }
 
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
         if ($key === null) {
             $k = array_search($key, $this->deleted);
             if (false!==$k) unset($this->deleted[$k]);
-            return $this->results[] = $value;
+            $this->results[] = $value;
+            return ;
         } else {
-            return $this->results[$key] = $value;
+            $this->results[$key] = $value;
+            return;
         }
     }
 
-    public function offsetUnset($key)
+    public function offsetUnset($key): void
     {
         $this->deleted[] = $key;
         unset($this->results[$key]);
@@ -274,6 +276,7 @@ class Collection extends \IteratorIterator implements
     private function hydrate()
     {
         $record = $this->record;
+        /** @var \ArrayAccess $rows */
         $rows   = $this->getInnerIterator();
         $offset = $this->current_page * static::$BATCH_SIZE;
         $this->results = array();

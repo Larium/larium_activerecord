@@ -19,7 +19,7 @@ class Adapter extends DatabaseMysqlAdapter
     }
     
     /**
-     * {@inheritdoc
+     * {@inheritdoc}
      *
      * @return Query
      */

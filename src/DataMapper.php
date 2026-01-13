@@ -15,15 +15,15 @@ trait DataMapper
     public static $primary_key = "id";
 
     protected $new_record = true;
-    
+
     protected $to_save = array();
-    
+
     protected $dirty = array();
-    
+
     private $attributes = array();
 
     /**
-     * Attributes placed here will not assigned when we passed an array 
+     * Attributes placed here will not assigned when we passed an array
      * of attributes in Record class.
      *
      * <code>
@@ -31,11 +31,11 @@ trait DataMapper
      * {
      *      protected $protected_attributes = array('field');
      * }
-     * 
+     *
      * $test = new Test(array('field'=>'value', 'field_a'=>'value_a');
      * // field attribute will not be assigned.
-     * 
-     * $test->field = 'value'; 
+     *
+     * $test->field = 'value';
      * // field value now will be assigned.
      * </code>
      *
@@ -48,7 +48,7 @@ trait DataMapper
     );
 
     protected static $adapter;
-    
+
     public function __construct($attrs=array(), $new_record=true)
     {
         $this->new_record = $new_record;
@@ -75,9 +75,9 @@ trait DataMapper
 
     public function __get($name)
     {
-        return array_key_exists($name, $this->attributes) 
+        return array_key_exists($name, $this->attributes)
             ? $this->attributes[$name]
-            : null; 
+            : null;
     }
 
     public function getAttributes()
@@ -88,23 +88,23 @@ trait DataMapper
     public function setAttributes($attrs, $protected=true)
     {
         if (true == $protected) {
-            
+
             $protected_attributes = array_merge(
-                $this->protected_attributes, 
+                $this->protected_attributes,
                 $this->_default_protected_attributres
             );
 
             $attrs = array_diff_key($attrs, array_flip($protected_attributes));
-            
+
         }
-            
+
         $this->set_attributes($attrs);
     }
 
     public function __isset($name)
     {
         return array_key_exists($name, $this->attributes);
-    } 
+    }
 
     public function __set($name, $value)
     {
@@ -126,29 +126,29 @@ trait DataMapper
 
     private function set_attributes($attrs)
     {
-        if ($this->new_record) { 
+        if ($this->new_record) {
             $this->attributes = array_combine(
-                static::$columns, 
+                static::$columns,
                 array_pad(array(), count(static::$columns), null)
             );
         }
 
         foreach ($attrs as $k=>$v) {
 
-            if ((  $this->new_record 
+            if ((  $this->new_record
                 && $this->attributes[$k] !== null)
                 || (array_key_exists($k, $this->attributes)
                 && $this->attributes[$k] != $v)
             ) {
                 $this->to_save[$k] = $v;
-                $this->dirty[$k] = isset($this->attributes[$k]) 
-                    ? $this->attributes[$k] 
+                $this->dirty[$k] = isset($this->attributes[$k])
+                    ? $this->attributes[$k]
                     : null;
             }
             if (in_array($k, static::$columns) ) {
                 $this->attributes[$k] = $v;
             } else {
-                $this->$k = $v; 
+                $this->$k = $v;
             }
 
         }
@@ -197,7 +197,7 @@ trait DataMapper
     {
         return Base::runCallbacks('destroy', $this, function() {
             $pk = static::$primary_key;
-            
+
             return static::getAdapter()->createQuery()
                 ->delete(static::$table, array($pk=>$this->$pk));
         });
@@ -210,21 +210,21 @@ trait DataMapper
 
     protected function create_or_update()
     {
-        $result = $this->new_record 
-            ? $this->create() 
+        $result = $this->new_record
+            ? $this->create()
             : $this->update();
-            
+
         if ($result) {
             $this->reload();
         }
-        
+
         return $result != false;
     }
-    
+
     private function create()
     {
         return Base::runCallbacks('create', $this, function(){
-            
+
             $attrs = $this->assign_attributes();
 
             static::find()->insert(static::$table, $attrs);
@@ -235,7 +235,7 @@ trait DataMapper
                 return true;
             } else {
                 return false;
-            } 
+            }
         });
     }
 
@@ -268,7 +268,7 @@ trait DataMapper
         $attr = array();
         $ref = new \ReflectionObject($this);
         $props = $ref->getProperties(\ReflectionProperty::IS_PUBLIC);
-        
+
         foreach ($props as $pro) {
             // skip static properties
             if ($pro->isStatic()) continue;
@@ -276,13 +276,13 @@ trait DataMapper
             false && $pro = new \ReflectionProperty();
             $attr[$pro->getName()] = $pro->getValue($this);
         }
-        
+
         return $attr;
     }
 
     public static function setAdapter(AdapterInterface $adapter)
     {
-        AdapterPool::add(get_called_class(), $adapter);
+        AdapterPool::add($adapter, get_called_class());
     }
 
     public static function getAdapter()

@@ -9,10 +9,10 @@ class AdapterFactory
     /**
      * Creates a new AdapterInterface based on given config values.
      *
-     * @param array $config 
+     * @param array $config
      * @static
      * @access public
-     * @return void
+     * @return \Larium\Database\AdapterInterface
      */
     public static function create(array $config)
     {

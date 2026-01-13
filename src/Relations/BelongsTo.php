@@ -4,8 +4,8 @@
 
 namespace Larium\ActiveRecord\Relations;
 
-use Larium\ActiveRecord\Record;
 use Larium\ActiveRecord\CollectionInterface;
+use Larium\ActiveRecord\Record;
 
 /**
  * ManyToOne relation class
@@ -62,17 +62,31 @@ class BelongsTo extends Relation
                 $foreignKeyValue = null;
             }
 
-            $where = array(
-                $this->getPrimaryKey() => $foreignKeyValue,
-            );
-
+            // For polymorphic associations, resolve the target class from the type column
             if (true === $this->options->polymorphic) {
-                $type = $this->getRelationAttribute() . '_type';
-                $where = array(
-                    $this->getPrimaryKey() => $this->getForeignKeyValue(),
-                    $type => $this->getPolymorphicTypeValue($type)
-                );
+                $typeColumn = $this->attribute . '_type';
+                $typeValue = $this->getPolymorphicTypeValue($typeColumn);
+                
+                // Resolve the target class dynamically from the type value
+                if ($typeValue) {
+                    // If type value is a class name, use it directly
+                    if (class_exists($typeValue)) {
+                        $relation_class = $typeValue;
+                        // Update relation_class so getPrimaryKey() uses the resolved class
+                        $this->relation_class = $relation_class;
+                    } else {
+                        // Fallback to record_name if type doesn't resolve to a class
+                        $relation_class = $this->relation_class;
+                    }
+                }
             }
+
+            // Get primary key from the resolved class
+            $primaryKey = $relation_class::$primary_key;
+
+            $where = array(
+                $primaryKey => $foreignKeyValue,
+            );
 
             $this->query = $relation_class::find()->where($where);
 
@@ -96,7 +110,7 @@ class BelongsTo extends Relation
 
     public function getPrimaryKey()
     {
-        if (null == $this->primary_key){
+        if (null == $this->primary_key) {
             $record = $this->getRelationClass();
             $this->primary_key = $record::$primary_key;
         }
@@ -134,7 +148,7 @@ class BelongsTo extends Relation
     public function destroy()
     {
         if ($this->options->dependent == 'destroy') {
-           return $this->fetch()->destroy();
+            return $this->fetch()->destroy();
         }
     }
 }

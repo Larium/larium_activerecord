@@ -6,7 +6,7 @@ namespace Larium\ActiveRecord\Mock;
 
 use Larium\Database\AdapterInterface;
 use Larium\Database\QueryInterface;
-use Larium\ActiveRecord\Mysql\Query;
+use Larium\ActiveRecord\Mock\Query;
 
 /**
  * Mock a MySQL database connection.

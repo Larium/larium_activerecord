@@ -4,11 +4,12 @@
 
 namespace Larium\ActiveRecord\Mysql;
 
+use Larium\ActiveRecord\Collection;
+use Larium\ActiveRecord\CollectionInterface;
 use Larium\ActiveRecord\Record;
 use Larium\ActiveRecord\Relations\Relation;
 use Larium\Database\Mysql\Query as DatabaseMysqlQuery;
-use Larium\ActiveRecord\Collection;
-use Larium\ActiveRecord\CollectionInterface;
+use Larium\Database\Mysql\ResultIterator;
 
 /**
  * Class Query
@@ -43,7 +44,7 @@ class Query extends DatabaseMysqlQuery
 
     /**
      * @param null $hydration
-     * @return Collection
+     * @return ResultIterator|Collection
      */
     public function fetchAll($hydration = null)
     {
@@ -53,12 +54,13 @@ class Query extends DatabaseMysqlQuery
     /**
      * @param string $mode
      * @param null $hydration
-     * @return \Iterator|Collection|Record|null
+     * @return ResultIterator|Collection|Record|null
      */
     protected function fetch_data($mode, $hydration = null)
     {
         $this->build_sql();
 
+        /** @var ResultIterator $iterator */
         $iterator = $this->adapter->execute($this, 'Load', $hydration);
 
         if ($this->object) {
@@ -85,11 +87,11 @@ class Query extends DatabaseMysqlQuery
     protected function eager_load(Collection $collection)
     {
         // eager loading
-        if ( !$collection->isEmpty() && !empty($this->eager) ) {
+        if (!$collection->isEmpty() && !empty($this->eager)) {
 
             // include extra queries for eager loading relations
-            foreach( $this->eager as $k=>$include ) {
-                if ( !is_numeric($k) ) {
+            foreach ($this->eager as $k=>$include) {
+                if (!is_numeric($k)) {
                     // chain association detected so call _includes method
                     // including $k
                     $this->_includes(array($k => $include), $collection, $this->object);
@@ -110,9 +112,9 @@ class Query extends DatabaseMysqlQuery
      */
     private function _includes($include, CollectionInterface $collection, $object)
     {
-        if ( is_array($include) && !is_numeric(key($include)) ) {
+        if (is_array($include) && !is_numeric(key($include))) {
             // we have chain associations to include
-            foreach($include as $parent=>$v){
+            foreach ($include as $parent=>$v) {
                 // include the parent association first.
                 // return the included collection as $c. $collection already
                 // merged association records.
@@ -127,14 +129,14 @@ class Query extends DatabaseMysqlQuery
                     // now if we have multiple includes, include them with parent
                     if (is_array($v)) {
                         $this->_includes($v, $c, $c->getRecord());
-                    // if we have not multiply includes just include it with parent
-                    // classify($v) to $c collection
+                        // if we have not multiply includes just include it with parent
+                        // classify($v) to $c collection
                     } else {
                         $this->_includes($v, $c, $c->getRecord());
                     }
                 }
             }
-        } elseif ( is_array($include) && is_numeric(key($include)) ) {
+        } elseif (is_array($include) && is_numeric(key($include))) {
             // just regular includes. not chains.
             foreach ($include as $i) {
                 $this->_includes($i, $collection, $object);

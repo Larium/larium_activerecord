@@ -32,4 +32,8 @@ interface CollectionInterface extends \ArrayAccess
     public function delete($search_value, $field_value);
 
     public function getRecord();
+
+    public function filter(\Closure $block);
+
+    public function count(): int;
 }

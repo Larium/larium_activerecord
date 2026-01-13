@@ -2,11 +2,13 @@
 
 namespace Larium\ActiveRecord;
 
+use Larium\ActiveRecord\Callback\Base;
 use Larium\ActiveRecord\Mysql\Adapter;
 use Larium\ActiveRecord\Mysql\Query;
 use Larium\ActiveRecord\Relations\BelongsTo;
 use Larium\ActiveRecord\Relations\HasOne;
-use Larium\ActiveRecord\Callback\Base;
+use Larium\ActiveRecord\Relations\Relation;
+use Larium\ActiveRecord\Relations\RelationCollectionInterface;
 use Larium\Database\AdapterInterface;
 
 /**
@@ -47,6 +49,13 @@ abstract class Record implements \ArrayAccess
     public static $primary_key = "id";
 
     protected $relation_attributes = array();
+
+    /**
+     * Cache for loaded relation objects to avoid dynamic properties (PHP 8.2+ compatibility)
+     *
+     * @var array
+     */
+    protected $loaded_relations = array();
 
     /**
      * Indicated if this record is new or not.
@@ -104,6 +113,8 @@ abstract class Record implements \ArrayAccess
     private $frozen = false;
 
     private $event_executor;
+
+    private static $callbacks = array();
 
     /**
      * @var AdapterInterface
@@ -169,9 +180,16 @@ abstract class Record implements \ArrayAccess
             return method_exists($this, $name)
                 ? $this->$name()
                 : $this->attributes[$name];
+        } elseif (isset($this->loaded_relations[$name])) {
+            // Return cached relation
+            return $this->loaded_relations[$name];
         } elseif ($relation = $this->getRelation($name)) {
 
             return $relation;
+        }
+
+        if (in_array($name, Base::$CALLBACKS)) {
+            return isset(self::$callbacks[get_class($this)][$name]) ? self::$callbacks[get_class($this)][$name] : [];
         }
 
         throw new \InvalidArgumentException(sprintf('%s::%s property does not exists', get_class($this), $name));
@@ -207,7 +225,7 @@ abstract class Record implements \ArrayAccess
                 if ($c) {
                     $return[$name] = $c;
                 }
-            } elseif( $value instanceof Relations\Relation) {
+            } elseif ($value instanceof Relations\Relation) {
                 $v = $value->fetch()->getAttributes();
                 if ($v) {
                     $return[$name] = $v;
@@ -228,11 +246,13 @@ abstract class Record implements \ArrayAccess
         $ref = new \ReflectionObject($this);
         $props = $ref->getProperties(\ReflectionProperty::IS_PUBLIC);
 
+        /** @var \ReflectionProperty $pro */
         foreach ($props as $pro) {
             // skip static properties
-            if ($pro->isStatic()) continue;
+            if ($pro->isStatic()) {
+                continue;
+            }
 
-            false && $pro = new \ReflectionProperty();
             $attr[$pro->getName()] = $pro->getValue($this);
         }
 
@@ -306,7 +326,9 @@ abstract class Record implements \ArrayAccess
 
     private function set_attribute($attr, $value, $load=false)
     {
-        if ($this->frozen) return false;
+        if ($this->frozen) {
+            return false;
+        }
 
         // Is $attr table field or relation?
         if (in_array($attr, static::$columns)) {
@@ -330,14 +352,20 @@ abstract class Record implements \ArrayAccess
 
             if ($value instanceof Record || $value instanceof Relations\Relation) {
 
-                $this->$attr = $value;
+                $this->loaded_relations[$attr] = $value;
             } else {
                 $this->hydrate_relation($attr, $value);
             }
 
-        } else {
+        } elseif (in_array($attr, Base::$CALLBACKS)) {
+            if (!isset(self::$callbacks[get_class($this)][$attr])) {
+                self::$callbacks[get_class($this)][$attr] = [];
+            }
+            self::$callbacks[get_class($this)][$attr][] = $value;
+        } elseif (property_exists($this, $attr)) {
             $this->$attr = $value;
         }
+
     }
 
     /**
@@ -404,7 +432,7 @@ abstract class Record implements \ArrayAccess
             return true;
         }
 
-        return Base::runCallbacks('destroy', $this, function() {
+        return Base::runCallbacks('destroy', $this, function () {
             $pk = static::$primary_key;
 
             $return = static::getAdapter()->createQuery()
@@ -452,7 +480,7 @@ abstract class Record implements \ArrayAccess
 
     private function create()
     {
-        return $this->getEventExecutor()->execute('create', function(){
+        return $this->getEventExecutor()->execute('create', function () {
 
             $attrs = $this->assign_attributes();
 
@@ -476,7 +504,7 @@ abstract class Record implements \ArrayAccess
 
     private function update()
     {
-        return $this->getEventExecutor()->execute('save', function(){
+        return $this->getEventExecutor()->execute('save', function () {
 
             if (!$this->isDirty() || empty($this->to_save)) {
                 return true;
@@ -505,15 +533,15 @@ abstract class Record implements \ArrayAccess
     {
         $relation_attrs = $this->getRelationAttributes();
         foreach ($relation_attrs as $attr) {
-            if ($rel = $this->$attr) {
+            if ($rel = isset($this->loaded_relations[$attr]) ? $this->loaded_relations[$attr] : $this->getRelation($attr)) {
                 if ($rel instanceof Relations\RelationCollectionInterface) {
-                    foreach($rel as $item)  {
+                    foreach ($rel as $item) {
                         if ($item->isDirty()) {
                             $item->save();
                         }
                     }
                 } elseif ($rel instanceof Record) {
-                    if ($rel->fetch() && $rel->fetch()->isDirty()){
+                    if ($rel->fetch() && $rel->fetch()->isDirty()) {
                         $rel->fetch()->save();
                     }
                 }
@@ -526,14 +554,16 @@ abstract class Record implements \ArrayAccess
         $attr = array();
         foreach (static::$columns as $column) {
 
-            if ($column == static::$primary_key) continue;
+            if ($column == static::$primary_key) {
+                continue;
+            }
 
             if (array_key_exists($column, $this->to_save)) {
                 $attr[$column] = $this->to_save[$column];
             }
         }
 
-        if (   in_array('created_at', static::$columns)
+        if (in_array('created_at', static::$columns)
             && $this->new_record
             && !isset($this->attributes['created_at'])
         ) {
@@ -572,7 +602,7 @@ abstract class Record implements \ArrayAccess
 
     public static function setAdapter(AdapterInterface $adapter)
     {
-        AdapterPool::add(get_called_class(), $adapter);
+        AdapterPool::add($adapter, get_called_class());
     }
 
     /**
@@ -585,7 +615,7 @@ abstract class Record implements \ArrayAccess
 
     public static function addAdapter(AdapterInterface $adapter)
     {
-        AdapterPool::add(get_called_class(), $adapter);
+        AdapterPool::add($adapter, get_called_class());
     }
 
     public static function useAdapter($name)
@@ -653,7 +683,7 @@ abstract class Record implements \ArrayAccess
     {
         foreach (self::$relations as $relation) {
             if (isset(static::$$relation) && !empty(static::$$relation)) {
-                if (   in_array($attribute, static::$$relation)
+                if (in_array($attribute, static::$$relation)
                     || array_key_exists($attribute, static::$$relation)
                 ) {
                     $o = static::$$relation;
@@ -667,6 +697,8 @@ abstract class Record implements \ArrayAccess
                 }
             }
         }
+
+        return null;
     }
 
     public function getRelationAttributes()
@@ -675,11 +707,11 @@ abstract class Record implements \ArrayAccess
             $relation_attributes = array();
 
             foreach (static::$relations as $relation) {
-                 if (isset(static::$$relation) && !empty(static::$$relation)) {
+                if (isset(static::$$relation) && !empty(static::$$relation)) {
 
-                     $attrs = array_keys(static::$$relation);
+                    $attrs = array_keys(static::$$relation);
 
-                     $relation_attributes =  array_merge($relation_attributes, $attrs);
+                    $relation_attributes =  array_merge($relation_attributes, $attrs);
                 }
             }
 
@@ -689,18 +721,32 @@ abstract class Record implements \ArrayAccess
         return $this->relation_attributes;
     }
 
+    /**
+     * @return Relation|null
+     */
     public function getRelation($attribute)
     {
-        if (!isset($this->$attribute)) {
-            $this->$attribute = self::getRelationship($this, $attribute);
+        if (in_array($attribute, Base::$CALLBACKS)) {
+            return null;
         }
 
-        return $this->$attribute;
+        // Check cache first
+        if (isset($this->loaded_relations[$attribute])) {
+            return $this->loaded_relations[$attribute];
+        }
+
+        // Create and cache relation if it exists
+        if ($relation = self::getRelationship($this, $attribute)) {
+            $this->loaded_relations[$attribute] = $relation;
+            return $relation;
+        }
+
+        return null;
     }
 
     public function setRelationValues($attribute, $values)
     {
-        $this->$attribute = $values;
+        $this->loaded_relations[$attribute] = $values;
     }
 
     public static function hasMany($name, $options=array())
@@ -733,7 +779,7 @@ abstract class Record implements \ArrayAccess
             if (is_array($value)) {
                 $iterator = new \ArrayIterator();
                 foreach ($value as $item) {
-                    if (   !isset($item[static::$primary_key])
+                    if (!isset($item[static::$primary_key])
                         || empty($item[static::$primary_key])
                     ) {
 
@@ -748,17 +794,17 @@ abstract class Record implements \ArrayAccess
                 $this->$method(new Collection($iterator));
             }
         } else {
-            $this->$attr = $hydrate_class::initWith($value, true);
+            $this->loaded_relations[$attr] = $hydrate_class::initWith($value, true);
         }
 
     }
 
     private function save_related_records()
     {
-        foreach($this->dirty_relations as $attr => $relation) {
+        foreach ($this->dirty_relations as $attr => $relation) {
 
-            if ($this->$attr instanceof Relations\Relation){
-                $this->$attr->saveDirty();
+            if (isset($this->loaded_relations[$attr]) && $this->loaded_relations[$attr] instanceof Relations\Relation) {
+                $this->loaded_relations[$attr]->saveDirty();
             }
         }
     }
@@ -777,7 +823,7 @@ abstract class Record implements \ArrayAccess
                 $collection->rewind();
 
                 while ($collection->valid()) {
-                    $rel->delete($collection->current(),$collection->key());
+                    $rel->delete($collection->current(), $collection->key());
                 }
             } else {
                 $rel->destroy();
@@ -792,7 +838,7 @@ abstract class Record implements \ArrayAccess
     {
         if (0 === strpos($name, 'get')) {
             return $this->call_accessor($name, $arguments);
-        } else if (0 === strpos($name, 'set')) {
+        } elseif (0 === strpos($name, 'set')) {
             return $this->call_mutator($name, $arguments);
         } else {
             $class = get_class($this);
@@ -802,17 +848,17 @@ abstract class Record implements \ArrayAccess
 
     protected function call_accessor($name, $arguments)
     {
-        $attribute = Inflect::underscore(str_replace('get','',$name));
+        $attribute = Inflect::underscore(str_replace('get', '', $name));
 
         if (array_key_exists($attribute, $this->attributes)) {
 
             return $this->$attribute;
         } elseif ($relation = $this->getRelation($attribute)) {
-            if (   $relation instanceof BelongsTo
+            if ($relation instanceof BelongsTo
                 || $relation instanceof HasOne
             ) {
                 return $relation->fetch();
-            } else {
+            } else if ($relation instanceof RelationCollectionInterface) {
                 return $relation->all();
             }
         }
@@ -822,7 +868,7 @@ abstract class Record implements \ArrayAccess
 
     protected function call_mutator($name, $arguments)
     {
-        $attribute = Inflect::underscore(str_replace('set', null, $name));
+        $attribute = Inflect::underscore(str_replace('set', '', $name));
 
         $value = current($arguments);
 
@@ -844,22 +890,22 @@ abstract class Record implements \ArrayAccess
 
     /* -( Array Access ) --------------------------------------------------- */
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return array_key_exists($offset, $this->attributes);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->getAttribute($offset);
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->set_dirty($offset, $value, $this->$offset);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $this->set_dirty($offset, null, $this->$offset);
     }

@@ -21,8 +21,8 @@ class AdapterPool
      * @return void
      */
     public static function add(
-        $record = 'Larium\\ActiveRecord\\Record',
-        AdapterInterface $adapter
+        AdapterInterface $adapter,
+        $record = 'Larium\\ActiveRecord\\Record'
     ) {
         self::$pool[$record] = $adapter;
     }

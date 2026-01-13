@@ -4,8 +4,9 @@
 
 namespace Larium\ActiveRecord\Relations;
 
-use Larium\ActiveRecord\Record;
 use Larium\ActiveRecord\CollectionInterface;
+use Larium\ActiveRecord\Record;
+use Larium\Database\QueryInterface;
 
 abstract class Relation
 {
@@ -18,7 +19,7 @@ abstract class Relation
 
     protected $primary_key;
 
-    protected $options = array();
+    protected ?Options $options = null;
 
     protected $attribute;
 
@@ -46,6 +47,11 @@ abstract class Relation
      * @var Query
      */
     protected $query;
+
+    /**
+     * @return QueryInterface
+     */
+    abstract public function find();
 
     /**
      *
@@ -103,7 +109,7 @@ abstract class Relation
      */
     protected function getRelationAttribute()
     {
-        $class = str_replace(__NAMESPACE__."\\", '', get_called_class());
+        $class = str_replace(__NAMESPACE__ . "\\", '', get_called_class());
         return $this->options->getRelationAttribute(
             $class,
             $this->options->record_name,
